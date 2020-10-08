@@ -1,0 +1,22 @@
+language: generic
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t azarelia/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true azarelia/react-test npm test
+
+after_success:
+  - docker build -t azarelia/multi-client ./client
+  - docker build -t azarelia/multi-nginx ./nginx
+  - docker build -t azarelia/multi-server ./server
+  - docker build -t azarelia/multi-worker ./worker
+
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  - docker push azarelia/multi-client
+  - docker push azarelia/multi-nginx
+  - docker push azarelia/multi-server
+  - docker push azarelia/multi-worker
